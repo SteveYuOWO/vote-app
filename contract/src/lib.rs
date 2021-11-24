@@ -60,24 +60,28 @@ impl VoteApp {
       }
       (winner, max_score)
     }
-    pub fn next_round(&mut self) -> (String, u128) {
-      self.round += 1;
-      self.has_vote = LookupMap::new(b"b".to_vec());
-      self.votes = LookupMap::new(b"c".to_vec());
-      self.candidates.clear();
-      self.winner()
-    }
-    pub fn add_candidate(&mut self, candidate: String) {
-        self.candidates.push(&candidate);
+    pub fn get_round(&self) -> u128 {
+      self.round
     }
     pub fn get_candidates(&self) -> Vec<String> {
         self.candidates.iter().map(|x| x.clone()).collect()
     }
+    pub fn next_round(&mut self) -> (String, u128) {
+      let result = self.winner();
+      self.round += 1;
+      self.has_vote = LookupMap::new(b"b".to_vec());
+      self.votes = LookupMap::new(b"c".to_vec());
+      self.candidates.clear();
+      result
+    }
+    pub fn add_candidate(&mut self, candidate: String) {
+        self.candidates.push(&candidate);
+    }
     pub fn vote(&mut self, candidate: String) -> bool {
-      if self.has_vote.get(&env::predecessor_account_id()).unwrap_or(String::from("false")) == "false" {
+      if self.has_vote.get(&env::predecessor_account_id()).unwrap_or(String::from("false")) == "true" {
         return false
       }
-      self.has_vote.insert(&candidate, &String::from("true"));
+      self.has_vote.insert(&env::predecessor_account_id(), &String::from("true"));
       let mut cnt = self.votes.get(&candidate).unwrap_or(0);
       cnt = cnt + 1;
       self.votes.insert(&candidate, &cnt);
