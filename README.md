@@ -1,3 +1,3 @@
 # vote-app
 
-Build for Challenge
+Build for NEAR Challenge 7
