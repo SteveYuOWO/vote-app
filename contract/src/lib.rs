@@ -55,7 +55,7 @@ impl VoteApp {
         return ("none".to_string(), 0);
       }
       let mut winner = self.candidates.get(0).unwrap();
-      let mut max_score = *self.votes.get(winner).unwrap();
+      let mut max_score = *self.votes.get(winner).unwrap_or(&0);
       for i in 1..self.candidates.len() {
         let candidate = self.candidates.get(i).unwrap();
         let score = *self.votes.get(candidate).unwrap();
