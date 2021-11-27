@@ -79,8 +79,11 @@ impl VoteApp {
       self.winner = result.0.clone();
       self.score = result.1;
       self.round += 1;
-      self.has_vote = LookupMap::new(b"b".to_vec());
-      self.votes = LookupMap::new(b"c".to_vec());
+      for i in 0..self.candidates.len() {
+        let candidate = self.candidates.get(i).unwrap();
+        self.has_vote.insert(&candidate, &String::from("false"));
+        self.votes.insert(&candidate, &0);
+      }
       self.candidates.clear();
       result
     }
