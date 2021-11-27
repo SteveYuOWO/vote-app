@@ -11,10 +11,11 @@
  *
  */
 
+use std::collections::{HashMap};
+
 // To conserve gas, efficient serialization is achieved through Borsh (http://borsh.io/)
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::{env, near_bindgen, setup_alloc};
-use near_sdk::collections::{LookupMap, Vector};
 
 setup_alloc!();
 
@@ -23,9 +24,9 @@ setup_alloc!();
 #[near_bindgen]
 #[derive(BorshDeserialize, BorshSerialize)]
 pub struct VoteApp{
-    has_vote: LookupMap<String, String>, // has votes
-    votes: LookupMap<String, u128>, // vote score
-    candidates: Vector<String>,
+    has_vote: HashMap<String, String>, // has votes
+    votes: HashMap<String, u128>, // vote score
+    candidates: Vec<String>,
     round: u128,
     winner: String,
     score: u128,
@@ -34,9 +35,9 @@ pub struct VoteApp{
 impl Default for VoteApp {
   fn default() -> Self {
     Self {
-      has_vote: LookupMap::new(b"b".to_vec()),
-      votes: LookupMap::new(b"c".to_vec()),
-      candidates: Vector::new(b"d".to_vec()),
+      has_vote: HashMap::new(),
+      votes: HashMap::new(),
+      candidates: Vec::new(),
       round: 0,
       winner: String::from(""),
       score: 0,
@@ -54,22 +55,22 @@ impl VoteApp {
         return ("none".to_string(), 0);
       }
       let mut winner = self.candidates.get(0).unwrap();
-      let mut max_score = self.votes.get(&winner).unwrap_or(0);
+      let mut max_score = *self.votes.get(winner).unwrap();
       for i in 1..self.candidates.len() {
         let candidate = self.candidates.get(i).unwrap();
-        let score = self.votes.get(&candidate).unwrap_or(0);
+        let score = *self.votes.get(candidate).unwrap();
         if score > max_score {
           winner = candidate;
           max_score = score;
         }
       }
-      (winner, max_score)
+      (winner.to_string(), max_score)
     }
     pub fn get_round(&self) -> u128 {
       self.round
     }
     pub fn get_score(&self, candidate: String) -> u128 {
-      self.votes.get(&candidate).unwrap_or(0)
+      *self.votes.get(&candidate).unwrap_or(&0)
     }
     pub fn get_candidates(&self) -> Vec<String> {
         self.candidates.iter().map(|x| x.clone()).collect()
@@ -79,25 +80,22 @@ impl VoteApp {
       self.winner = result.0.clone();
       self.score = result.1;
       self.round += 1;
-      for i in 0..self.candidates.len() {
-        let candidate = self.candidates.get(i).unwrap();
-        self.has_vote.insert(&candidate, &String::from("false"));
-        self.votes.insert(&candidate, &0);
-      }
-      self.candidates.clear();
+      self.has_vote = HashMap::new();
+      self.votes = HashMap::new();
+      self.candidates = Vec::new();
       result
     }
     pub fn add_candidate(&mut self, candidate: String) {
-        self.candidates.push(&candidate);
+        self.candidates.push(candidate);
     }
     pub fn vote(&mut self, candidate: String) -> bool {
-      if self.has_vote.get(&env::predecessor_account_id()).unwrap_or(String::from("false")) == "true" {
+      if self.has_vote.get(&env::predecessor_account_id()).unwrap_or(&String::from("false")) == "true" {
         return false
       }
-      self.has_vote.insert(&env::predecessor_account_id(), &String::from("true"));
-      let mut cnt = self.votes.get(&candidate).unwrap_or(0);
-      cnt = cnt + 1;
-      self.votes.insert(&candidate, &cnt);
+      self.has_vote.insert(env::predecessor_account_id(), String::from("true"));
+      let cnt = self.votes.get(&candidate).unwrap_or(&0);
+      let incr = *cnt + 1;
+      self.votes.insert(candidate, incr);
       return true
     }
 }
