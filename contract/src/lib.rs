@@ -27,7 +27,8 @@ pub struct VoteApp{
     votes: LookupMap<String, u128>, // vote score
     candidates: Vector<String>,
     round: u128,
-    winner: Vector<String>,
+    winner: String,
+    score: u128,
 }
 
 impl Default for VoteApp {
@@ -37,13 +38,17 @@ impl Default for VoteApp {
       votes: LookupMap::new(b"c".to_vec()),
       candidates: Vector::new(b"d".to_vec()),
       round: 0,
-      winner: Vector::new(b"e".to_vec()),
+      winner: String::from(""),
+      score: 0,
     }
   }
 }
 
 #[near_bindgen]
 impl VoteApp {
+    pub fn last_winner(&self) -> (String, u128) {
+      (self.winner.clone(), self.score)
+    }
     pub fn winner(&self) -> (String, u128) {
       if self.candidates.len() == 0 {
         return ("none".to_string(), 0);
@@ -71,6 +76,8 @@ impl VoteApp {
     }
     pub fn next_round(&mut self) -> (String, u128) {
       let result = self.winner();
+      self.winner = result.0.clone();
+      self.score = result.1;
       self.round += 1;
       self.has_vote = LookupMap::new(b"b".to_vec());
       self.votes = LookupMap::new(b"c".to_vec());
