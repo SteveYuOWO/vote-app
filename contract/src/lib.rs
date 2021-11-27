@@ -63,6 +63,9 @@ impl VoteApp {
     pub fn get_round(&self) -> u128 {
       self.round
     }
+    pub fn get_score(&self, candidate: String) -> u128 {
+      self.votes.get(&candidate).unwrap_or(0)
+    }
     pub fn get_candidates(&self) -> Vec<String> {
         self.candidates.iter().map(|x| x.clone()).collect()
     }
@@ -86,8 +89,5 @@ impl VoteApp {
       cnt = cnt + 1;
       self.votes.insert(&candidate, &cnt);
       return true
-    }
-    pub fn get_score(&mut self, candidate: String) -> u128 {
-      self.votes.get(&candidate).unwrap_or(0)
     }
 }
